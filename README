@@ -1,0 +1,9 @@
+Just an quick hack for an instant flickr search using appengine as an intermediary.
+
+You could do it without it, calling the flickr api directly from javascript.
+
+The google suggest is not working anymore.
+
+here is the site running it
+
+http://instantimg.appspot.com/flickr
