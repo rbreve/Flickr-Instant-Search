@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Instant Image Search</title>
+    <style>
+    
+        body{
+	        font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
+        }
+        
+        .cbox{
+            width:70px;
+            background-color:#EEE;
+            float:right;
+            text-align:center;
+            margin-left:2px;
+          }
+         
+         #footer{
+             color:#666;
+             font-size:11px;
+             padding: 3px;
+             width:100%;
+             display:block;
+             height:80px;
+         }
+         
+        .options{
+            font-size:10px;
+             color:#666;
+          
+        }
+        
+        #colors{
+            margin-top:-50px;
+        }
+     
+        #content{
+            margin-top:80px;
+        }
+    
+        #content img{
+            margin-left:5px;
+            width:400px;
+        }
+        
+        .imgresult{
+            float:left;
+        }
+        #content p{
+            color:#444;
+        }
+        
+        #searching{
+            display:inline;
+            color:#AAA;
+        }
+        #query{
+            font-size:15px;
+            width:300px;
+        }
+        
+        #COLOR_PURPLE{
+            background-color:purple;
+        }
+        
+        #COLOR_BLUE{
+            background-color:blue;
+        }
+        
+        #COLOR_BLACK{
+            background-color:black;
+        }
+        #COLOR_RED{
+            background-color:red;
+        }
+        
+        #COLOR_BROWN{
+             background-color:brown;
+        }
+        
+       #COLOR_GREEN{
+           background-color:green;
+       }
+       
+       #COLOR_ORANGE{
+           background-color:orange;
+       }
+        
+        .color{
+            width:30px;
+            height:30px;
+            float:right;
+            margin:2px;
+            border-style: solid;
+            border-color:#555;
+            border-width: 0px;
+
+        }
+        
+    </style>
+    
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+    <script src="http://www.google.com/jsapi?key=ABQIAAAAhDMTsea4WL9PLX_5KwC52hQ1jaQ2TaivRXX48_aC4pu_gxy4kRQdkpHs9F5lZDm3w5fKd7dzNYf6Fw" type="text/javascript"></script>
+    
+    <script type="text/javascript">
+        var ImageSearch;
+        var color="";
+        var suggest="";
+        google.load('search', '1');
+        
+        
+        function searchComplete(searcher) {
+            if (searcher.results && searcher.results.length > 0) {
+                $("#content").html("");
+                var results = searcher.results;
+                for (var i = 0; i < results.length; i++) {
+                    var result = results[i];
+                    code='<div class="imgresult"><a href="'+result.unescapedUrl+'" target="_blank"><img src="'+result.unescapedUrl+'"></a></div>';
+                    $("#content").append(code);
+                    //originalContextUrl url de la pagina
+                    //
+                    //alert(result.unescapedUrl)
+                 }
+            }
+        }
+        
+        
+        
+        function OnLoad() {
+                // Our ImageSearch instance.
+                imageSearch = new google.search.ImageSearch();
+                imageSearch.setResultSetSize(8);
+                imageSearch.setSearchCompleteCallback(this, searchComplete, [imageSearch]);
+                
+             }
+            
+        google.setOnLoadCallback(OnLoad);
+
+        $(document).ready(function(){
+            
+            $("#cc").click(function(){
+                 if($(this).attr("checked")==true){
+                    imageSearch.setRestriction(google.search.ImageSearch.RESTRICT_RIGHTS, google.search.ImageSearch.RIGHTS_REUSE);
+                }
+                else{
+                    imageSearch.setRestriction(google.search.ImageSearch.RESTRICT_RIGHTS, null);
+                }
+                imageSearch.execute($("#query").val());
+             });
+             
+             $("#safe").click(function(){
+                 if($(this).attr("checked")==true){
+                    imageSearch.setRestriction(google.search.Search.RESTRICT_SAFESEARCH,google.search.Search.SAFESEARCH_OFF);
+                }
+                else{
+                    imageSearch.setRestriction(google.search.Search.RESTRICT_SAFESEARCH, google.search.Search.SAFESEARCH_MODERATE);
+                }
+                imageSearch.execute($("#query").val());    
+                 
+             })
+            
+            $(".color").click(function(){
+               newcolor=$(this).attr("id");
+               if (color==newcolor){
+                   color="";
+                   $(this).css("border-width","0px");
+                   imageSearch.setRestriction(google.search.ImageSearch.RESTRICT_COLORFILTER,null);
+
+               }else{
+               
+                   color=$(this).attr("id");
+               
+                   $(".color").css("border-width","0px");
+                   $(this).css("border-width","2px");
+               
+                   if(color!="")
+                        imageSearch.setRestriction(google.search.ImageSearch.RESTRICT_COLORFILTER, eval("google.search.ImageSearch."+color));
+               }
+                
+               imageSearch.execute($("#query").val());
+            });
+            
+            $("form").submit(function(){
+                $("#query").val(suggest);
+                imageSearch.execute(suggest);
+                return false;
+            });
+            
+            $("#query").keyup(function(){
+               q= $("#query").val();
+               $("#searching").html("");
+                imageSearch.execute(q);
+                $.ajax({
+                    type:"GET",
+                    url:  "http://suggestqueries.google.com/complete/search?json&hl=en&ds=i&q="+q,
+                    dataType: "jsonp",
+                    success: function(data){
+                        suggest=data[1][0];
+                        $("#searching").html(suggest);
+                        //console.log(data);
+                        //data=eval(data);
+                        /*
+                        $.each(data[1], function(key, item){
+                            $("#searching").append(item); 
+                        });
+                        */
+                    }
+                });
+            });
+        
+        });
+        
+    </script>
+    
+    <style type="text/css">
+    </style>
+    
+  </head>
+  <body>
+    <div id="header">
+    <form id="sform">
+     
+    <input type="text" name="query" id="query" >
+    
+    <div id="searching"></div>
+    
+         <div class="options">
+       <input type="checkbox" id="cc"/>Commons 
+       <input type="checkbox" id="safe"/>pr0n
+    </div>
+
+    <div id="colors">
+    <div class="color" id="COLOR_BLUE"></div>
+    <div class="color" id="COLOR_PURPLE"></div>
+    <div class="color" id="COLOR_BLACK"></div>
+    <div class="color" id="COLOR_RED"></div>
+    <div class="color" id="COLOR_BROWN"></div>
+    <div class="color" id="COLOR_ORANGE"></div>
+    </div>
+    <input type="hidden" name="color">
+    </form>
+    </div>
+    <div id="content">    
+    </div>
+    
+   <div id="footer">
+      This is an instant image search using Google API, you can filter by colors, safe mode and creative commons <a href="http://twitter.com/rbreve">@rbreve</a>
+    </div>
+   
+  </body>
+</html>

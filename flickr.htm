@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Instant Flickr Search</title>
+    <style>
+    
+        body{
+	        font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
+        }
+        
+        .cbox{
+            width:70px;
+            background-color:#EEE;
+            float:right;
+            text-align:center;
+            margin-left:2px;
+          }
+         
+         #footer{
+             color:#666;
+             font-size:11px;
+             padding: 3px;
+             width:100%;
+             display:block;
+             height:80px;
+         }
+         
+        .options{
+            font-size:10px;
+             color:#666;
+          
+        }
+        
+        #colors{
+            margin-top:-50px;
+        }
+     
+        #content{
+            margin-top:80px;
+        }
+    
+        #content img{
+            margin-left:5px;
+         }
+        
+        .images{
+            float:left;
+        }
+        
+        .imgresult{
+            float:left;
+        }
+        #content p{
+            color:#444;
+        }
+        
+        #searching{
+            display:inline;
+            color:#AAA;
+        }
+        #query{
+            font-size:18px;
+            width:300px;
+        }
+        
+        #COLOR_PURPLE{
+            background-color:purple;
+        }
+        
+        #COLOR_BLUE{
+            background-color:blue;
+        }
+        
+        #COLOR_BLACK{
+            background-color:black;
+        }
+        #COLOR_RED{
+            background-color:red;
+        }
+        
+        #COLOR_BROWN{
+             background-color:brown;
+        }
+        
+       #COLOR_GREEN{
+           background-color:green;
+       }
+       
+       #COLOR_ORANGE{
+           background-color:orange;
+       }
+        
+        .color{
+            width:30px;
+            height:30px;
+            float:right;
+            margin:2px;
+            border-style: solid;
+            border-color:#555;
+            border-width: 0px;
+
+        }
+        
+    </style>
+    
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+ 
+    
+    <script type="text/javascript">
+        var ImageSearch;
+        var color="";
+        var suggest="";
+        
+        function Flickr()
+        {
+            this.url="/gf";
+            this.tags="";
+            this.commons="";
+            this.order="relevance";
+        }
+        
+        Flickr.prototype.execute = function(query){
+            //console.log(query);
+            //alert(this.safe);
+            $.get("/gf",{q:query,t:this.tags,c:this.commons, o:this.order}, function(data){
+                data=JSON.parse(data);
+    
+                $("#content").html("");
+            
+            if(window.stop !== undefined)
+               {
+                   window.stop();
+               }
+               else if(document.execCommand !== undefined)
+               {
+                   document.execCommand("Stop", false);
+               }
+               
+                for(var i in data){
+                    $("#content").append('<a target="_blank" href="http://www.flickr.com/photos/'+data[i].user_id+'/'+ data[i].id+'"><img src="'+data[i].photo+'"</img></a>');    
+                    //$("#img_"+i).attr("src",data[i].photo);
+                }
+            });
+        }
+        
+ 
+     
+        $(document).ready(function(){
+            var imageSearch = new Flickr;
+
+     
+            
+            $("#cc").click(function(){
+                 if($(this).attr("checked")==true){
+                   imageSearch.commons="true";
+                }
+                else{
+                   imageSearch.commons="";
+                }
+                imageSearch.execute($("#query").val());
+             });
+             
+             $(".radio").click(function(){
+                 //alert($("input:radio[name=order]:checked").val());
+                 imageSearch.order=$("input:radio[name=order]:checked").val();
+                 imageSearch.execute($("#query").val());
+             })
+             
+             $("#safe").click(function(){
+                 if($(this).attr("checked")==true){
+                    imageSearch.tags="1";
+                }
+                else{
+                   imageSearch.tags="";
+                }
+                imageSearch.execute($("#query").val());    
+                 
+             })
+            
+           
+            
+            $("form").submit(function(){
+                imageSearch.execute($("#query").val());
+                return false;
+            });
+            
+            $("#query").keydown(function(event){
+                if((event.keyCode == 9)||(event.keyCode == 39)){
+                    $("#query").val(suggest);
+                    return false;
+                }
+                
+                if(event.keyCode == 13){
+                  imageSearch.execute($("#query").val());   
+                  //alert($("#query").val());
+                }
+             });
+            
+            $("#query").keyup(function(event){
+                //console.log(event.keyCode);
+               
+                if(event.keyCode != 13){
+                    q= $("#query").val();
+                    $("#searching").html("");
+                
+                    $.ajax({
+                        type:"GET",
+                        url:  "http://suggestqueries.google.com/complete/search?json&hl=en&ds=i&q="+q,
+                        dataType: "jsonp",
+                        success: function(data){
+                            suggest=data[1][0];
+                            $("#searching").html(suggest);
+                            imageSearch.execute(suggest);
+
+                        }
+                    });
+                }
+             });
+        
+        });
+        
+    </script>
+    
+    <style type="text/css">
+    </style>
+    
+  </head>
+  <body>
+    <div id="header">
+    <form id="sform">
+     
+    Flickr Instant <input type="text" name="query" id="query" >
+    
+    <div id="searching"></div>
+    
+    <div class="options">
+       <input type="checkbox" id="cc"/>Commons 
+       <input type="checkbox" id="safe"/>Tags
+        
+       
+       <input type="radio" name="order" value="relevance" class="radio" checked/> Relevance
+       <input type="radio" name="order" value="interesting" class="radio"/> Interesting
+        <input type="radio" name="order" value="recent" class="radio" /> Recent
+    </div>
+ 
+    <input type="hidden" name="color">
+    </form>
+    </div>
+    <div id="content">  
+    </div>
+    
+   <div id="footer">
+      This is an instant image search for flickr, you can search by tags and the commons <a href="http://twitter.com/rbreve">@rbreve</a> 
+    </div>
+   
+  </body>
+</html>
